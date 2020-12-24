@@ -5,11 +5,28 @@
 #
 
 import sqlite3
-import numpy
-con = sqlite3.connect('configs.db')
+import os
+from os import name
+
+def clearScreen():
+    if name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
+
+db_name = ""
+file = ""
+while True:
+    clearScreen()
+    db_name = raw_input("Please input database name: ")
+    clearScreen()
+    file = raw_input("Please input name of switch log to add to database: ")
+    break
+
+con = sqlite3.connect(db_name+".db")
 c = con.cursor()
 
-file = "pre_deploy.txt"
+file = file + ".txt"
 
 mac_data = []
 ports = []
@@ -29,10 +46,9 @@ with open(file) as infile:
 c.execute("""CREATE TABLE configs (
             mac_address text,
             port text,
-            vlan text
+            vlan integer
             )""")
 con.commit()
-
 
 mac_data = mac_data[4:]
 print i
@@ -47,10 +63,15 @@ config_list = []
 c.execute("alter table configs add column config 'text'")
 con.commit()
 
+temp_line = []
+
 for port in ports:
     temp = "interface " + port
     with open(file) as infile:
         for line in infile:
+            #print line
+            #temp_line.append(line)
+            #print temp_line
             templine = line.strip()
             if temp == templine:
                 found_port = True
@@ -60,6 +81,8 @@ for port in ports:
                 if line == "":
                     continue
                 else:
+                    if(line.startswith("interface " + port)):
+                        continue
                     config_list.append(line)
         port_config = "".join(config_list)
     
