@@ -1,3 +1,31 @@
-# Mac-Config-Script
+# MAC-Config-Script
 
-These scripts will parse a log file containing "show mac address-table" then prepare configs for those mac address in a local database.
+This script exports the mac address table thats found in cisco switches, to a sqlite datbase for easier data manipulation. 
+
+## Requirements
+
+###### MAC OS
+```bash
+sudo easy_install pip
+```
+
+```bash
+pip install ttkthemes
+```
+
+###### Windows
+Download and install Visual Studio Code, download Python package from the Marketplace.
+
+```bash
+pip install ttkthemes
+```
+
+## Usage
+
+```bash
+python3 script.py
+```
+
+A GUI will open prompting for Pre-Deployment and Post-Deployment Buttons.
+
+Fill out all required fields so you get a successful script run.
