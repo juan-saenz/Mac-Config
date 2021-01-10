@@ -44,14 +44,7 @@ class App(tk.Tk):
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
-
-    def getDatabase (self):
-        global label4
-        self.filename3 = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("database files","*.db"),("all files","*.*")))
-        label4 = ttk.Label(self,text=self.filename3)
-        label4.pack(pady=10,padx=10)
-
-        
+  
 class StartPage(tk.Frame):
 
     def __init__(self, parent, controller):
@@ -78,7 +71,7 @@ class PageOne(tk.Frame):
         global canvas
         canvas = tk.Canvas(self, width = 500, height = 300, bg="#f6f7f8", highlightthickness=0)
         canvas.pack()
-
+        
         button1 = ttk.Button(self, text='Select Pre-Deployment Log', command=lambda: self.getFileName())
         canvas.create_window(250, 20, window=button1)
 
@@ -92,14 +85,13 @@ class PageOne(tk.Frame):
         button2 = ttk.Button(self, text='Create Database', command=lambda: self.createDatabase())
         canvas.create_window(250, 180, window=button2)
 
-        button3 = ttk.Button(self, text="Back to Main",
-                            command=lambda: controller.show_frame(StartPage))
+        button3 = ttk.Button(self, text="Back to Main", command=lambda: controller.show_frame(StartPage))
         canvas.create_window(60, 280, window=button3)
 
-    def getFileName(self):
+    def getFileName (self):
         global label2
         self.filename1 = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("text files","*.txt"),("all files","*.*")))
-        label2 = ttk.Label(self,text=self.filename1)
+        label2 = ttk.Label(self, text=self.filename1)
         canvas.create_window(250, 50, window=label2)
 
     def createDatabase (self):
@@ -232,47 +224,48 @@ class PageTwo(tk.Frame):
 
         label = ttk.Label(self, text="Create Configurations", font=LARGE_FONT)
         label.pack(pady=10,padx=10)
-        global canvas
-        canvas = tk.Canvas(self, width = 500, height = 300, bg="#f6f7f8", highlightthickness=0)
-        canvas.pack()
 
-        button3 = ttk.Button(self, text='Select Post-Deployment Log', command=lambda: self.getFileName2())
-        canvas.create_window(250, 20, window=button3)
+        global canvas2
+        canvas2 = tk.Canvas(self, width = 500, height = 300, bg="#f6f7f8", highlightthickness=0)
+        canvas2.pack()
 
-        button4 = ttk.Button(self, text='Select Database', command=lambda: self.getDatabase())
-        canvas.create_window(250, 100, window=button4)
+        button1 = ttk.Button(self, text='Select Post-Deployment Log', command=lambda: self.getFileName2())
+        canvas2.create_window(250, 20, window=button1)
 
-        output2 = ttk.Label(self, text = "Save Config File As:")
-        canvas.create_window(150, 180, window =output2)
+        button2 = ttk.Button(self, text='Select Database', command=lambda: self.getDatabase())
+        canvas2.create_window(250, 100, window=button2)
+
+        output1 = ttk.Label(self, text = "Save Config File As:")
+        canvas2.create_window(150, 180, window =output1)
 
         global config_input
         config_input = ttk.Entry(self)
-        canvas.create_window(150, 210, window=config_input)
+        canvas2.create_window(150, 210, window=config_input)
 
-        output3 = ttk.Label(self, text = "VLANs")
-        canvas.create_window(350, 180, window =output3)
+        output2 = ttk.Label(self, text = "VLANs")
+        canvas2.create_window(350, 180, window =output2)
+
         global vlan_input
         vlan_input = ttk.Entry(self)
-        canvas.create_window(350, 210, window=vlan_input)
+        canvas2.create_window(350, 210, window=vlan_input)
 
-        button5 = ttk.Button(self, text='Create Configurations', command=lambda: self.createConfig())
-        canvas.create_window(250, 250, window=button5)
+        button3 = ttk.Button(self, text='Create Configurations', command=lambda: self.createConfig())
+        canvas2.create_window(250, 250, window=button3)
 
-        button6 = ttk.Button(self, text='Back to Main',
-                            command=lambda: controller.show_frame(StartPage))
-        canvas.create_window(60, 280, window=button6)
-        
-    def getFileName2(self):
+        button4 = ttk.Button(self, text='Back to Main', command=lambda: controller.show_frame(StartPage))
+        canvas2.create_window(60, 280, window=button4)
+
+    def getFileName2 (self):
         global label3
         self.filename2 = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("text files","*.txt"),("all files","*.*")))
         label3 = ttk.Label(self,text=self.filename2)
-        canvas.create_window(250, 50, window=label3)
+        canvas2.create_window(250, 50, window=label3)
 
     def getDatabase (self):
         global label4
         self.filename3 = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("database files","*.db"),("all files","*.*")))
         label4 = ttk.Label(self,text=self.filename3)
-        canvas.create_window(250, 130, window =label4)
+        canvas2.create_window(250, 130, window =label4)
 
     def createConfig (self):
         file = self.filename2
@@ -346,11 +339,11 @@ class PageTwo(tk.Frame):
                             temp1 = temp[0]
                             #print(temp1)
 
-                            #if "switchport mode trunk" not in temp1:
-                            config.append("\r\ndefault interface " + item[num]+"\r\n")
-                            config.append("interface " + item[num]+"\r\n")
-                            con.text_factory = str
-                            config.append(temp1)
+                            if "switchport mode trunk" not in temp1:
+                                config.append("\r\ndefault interface " + item[num]+"\r\n")
+                                config.append("interface " + item[num]+"\r\n")
+                                con.text_factory = str
+                                config.append(temp1)
                             
 
             for elem in config:
@@ -360,7 +353,7 @@ class PageTwo(tk.Frame):
         con.close()
 
         output = ttk.Label(self, text = "Configuration Text File Created!")
-        canvas.create_window(250, 285, window =output)
+        canvas2.create_window(250, 285, window =output)
 
 app = App()
 app.mainloop()
