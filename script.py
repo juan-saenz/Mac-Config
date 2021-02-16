@@ -10,7 +10,8 @@ file = ""
 vlan = ""
 format_dic = {"Catalyst 4500 L3 Switch Software":1,
                 "C3750 Software":2, 
-                "C2960 Software":2, 
+                "C2960 Software":2,
+                "C2960X Software":2, 
                 "Catalyst L3 Switch Software":2,
                 "C3750E Software":2, 
                 "C3500XL Software":2, 
@@ -163,8 +164,14 @@ class PageOne(tk.Frame):
 
         print("MAC Addresses Found: "+ str(i))
         ii=0
+        #print(mac_data)
         for r in mac_data:
-            if r[x] != "CPU":
+            if format_type == 2:
+                if r[x] != "CPU":
+                    ii += 1
+                    ports.append(r[x])
+                    c.execute("INSERT INTO configs VALUES ('{}', '{}', '{}')".format(r[1], r[x], r[0]))
+            else:
                 ii += 1
                 ports.append(r[x])
                 c.execute("INSERT INTO configs VALUES ('{}', '{}', '{}')".format(r[1], r[x], r[0]))
@@ -176,6 +183,7 @@ class PageOne(tk.Frame):
         config_list = []
         c.execute("alter table configs add column config 'text'")
         con.commit()
+        temp = ""
 
         for port in ports:
             if format_type == 1:
@@ -236,18 +244,22 @@ class PageTwo(tk.Frame):
         canvas2.create_window(250, 100, window=button2)
 
         output1 = ttk.Label(self, text = "Save Config File As:")
-        canvas2.create_window(150, 180, window =output1)
+        canvas2.create_window(100, 180, window =output1)
 
         global config_input
         config_input = ttk.Entry(self)
-        canvas2.create_window(150, 210, window=config_input)
+        canvas2.create_window(100, 210, window=config_input)
 
         output2 = ttk.Label(self, text = "VLANs")
-        canvas2.create_window(350, 180, window =output2)
+        canvas2.create_window(300, 180, window =output2)
 
         global vlan_input
         vlan_input = ttk.Entry(self)
-        canvas2.create_window(350, 210, window=vlan_input)
+        canvas2.create_window(300, 210, window=vlan_input)
+
+        global checkbox1
+        checkbox1 = ttk.Checkbutton(self, text = 'Trunk Ports', takefocus=0)
+        canvas2.create_window(450, 210, window =checkbox1)
 
         button3 = ttk.Button(self, text='Create Configurations', command=lambda: self.createConfig())
         canvas2.create_window(250, 250, window=button3)
@@ -277,6 +289,7 @@ class PageTwo(tk.Frame):
         mac_data = []
         always_print = False
         format_type = 0
+        trunkport = False
 
         with open(file) as infile:
             for line in infile:
@@ -314,13 +327,14 @@ class PageTwo(tk.Frame):
             num=3
             mac_data = mac_data[7:]
 
+        print(format_type)
         fileout = config_input.get()
         config = []
         duplicate_check = []
 
         commands_not_wanted = ['switchport trunk encapsulation dot1q', 'macro description cisco-phone', 'tx-queue',
                             'bandwidth percent', 'priority high', 'shape percent']
-
+        counter = 0
         with open(fileout,'w') as outfile:
             for item in mac_data:
                 if item[num] in duplicate_check:
@@ -337,15 +351,24 @@ class PageTwo(tk.Frame):
                         temp = c.fetchone()
                         if temp != None:
                             temp1 = temp[0]
+                            counter += 1
                             #print(temp1)
-
-                            if "switchport mode trunk" not in temp1:
+                            if checkbox1.instate(['selected']) == True:
                                 config.append("\r\ndefault interface " + item[num]+"\r\n")
                                 config.append("interface " + item[num]+"\r\n")
                                 con.text_factory = str
                                 config.append(temp1)
-                            
-
+                                if counter % 10 == 0:
+                                    config.append("\n\n\n\n\n")
+                            else:
+                                if "switchport mode trunk" not in temp1:
+                                    config.append("\r\ndefault interface " + item[num]+"\r\n")
+                                    config.append("interface " + item[num]+"\r\n")
+                                    con.text_factory = str
+                                    config.append(temp1)
+                                    if counter % 10 == 0:
+                                        config.append("\n\n\n\n")
+            #print(config)
             for elem in config:
                 outfile.write(elem)
 
