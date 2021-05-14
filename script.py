@@ -296,6 +296,7 @@ class PageTwo(tk.Frame):
                 for item in format_dic:
                     if item in line:
                         format_type = format_dic[item]
+                        ios = item
                         if format_type == 1:
                             i=-5
                         if format_type == 2:
@@ -327,7 +328,7 @@ class PageTwo(tk.Frame):
             num=3
             mac_data = mac_data[7:]
 
-        print(format_type)
+        print("IOS Found: " + ios)
         fileout = config_input.get()
         config = []
         duplicate_check = []
