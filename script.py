@@ -24,7 +24,7 @@ class App(tk.Tk):
 
         tk.Tk.wm_title(self, "Configuration Script")
         style = ThemedStyle()
-        style.theme_use('arc')
+        style.theme_use('yaru')
 
         container = ttk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
@@ -186,6 +186,7 @@ class PageOne(tk.Frame):
         temp = ""
 
         for port in ports:
+            found_port = False
             if format_type == 1:
                 temp = "interface " + port
             if format_type == 2:
@@ -198,11 +199,16 @@ class PageOne(tk.Frame):
                 elif port.startswith('Po'):
                     port2 = port.replace('Po', 'Port-channel')
                     temp = "interface " + port2
+                elif port.startswith('Te'):
+                    port2 = port.replace('Te', 'TenGigabitEthernet')
+                    temp = "interface " + port2
+                elif port.startswith('Twe'):
+                    port2 = port.replace('Twe', 'TwentyFiveGigE')
+                    temp = "interface " + port2
 
             with open(file) as infile:
                 for line in infile:
                     templine = line.strip()
-                    #print(templine + " == " + temp)
                     if temp == templine:
                         found_port = True
                     if line.startswith("!"):
@@ -352,13 +358,13 @@ class PageTwo(tk.Frame):
                         temp = c.fetchone()
                         if temp != None:
                             temp1 = temp[0]
-                            counter += 1
                             #print(temp1)
                             if checkbox1.instate(['selected']) == True:
                                 config.append("\r\ndefault interface " + item[num]+"\r\n")
                                 config.append("interface " + item[num]+"\r\n")
                                 con.text_factory = str
                                 config.append(temp1)
+                                counter += 1
                                 if counter % 10 == 0:
                                     config.append("\n\n\n\n\n")
                             else:
@@ -367,6 +373,7 @@ class PageTwo(tk.Frame):
                                     config.append("interface " + item[num]+"\r\n")
                                     con.text_factory = str
                                     config.append(temp1)
+                                    counter += 1
                                     if counter % 10 == 0:
                                         config.append("\n\n\n\n")
             #print(config)
