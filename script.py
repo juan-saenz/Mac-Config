@@ -17,6 +17,7 @@ format_dic = {"Catalyst 4500 L3 Switch Software":1,
                 "C3500XL Software":2, 
                 "C3560 Software":2}
 
+# initializes GUI Application
 class App(tk.Tk):
 
     def __init__(self, *args, **kwargs):
@@ -24,7 +25,7 @@ class App(tk.Tk):
 
         tk.Tk.wm_title(self, "Configuration Script")
         style = ThemedStyle()
-        style.theme_use('yaru')
+        style.theme_use('arc')
 
         container = ttk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
@@ -33,6 +34,7 @@ class App(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
         self.frames = {}
 
+        # creates "pages"
         for F in (StartPage, PageOne, PageTwo):
 
             frame = F(container, self)
@@ -48,6 +50,7 @@ class App(tk.Tk):
   
 class StartPage(tk.Frame):
 
+    # initializes the main page
     def __init__(self, parent, controller):
         ttk.Frame.__init__(self,parent)
 
@@ -63,6 +66,7 @@ class StartPage(tk.Frame):
 
 class PageOne(tk.Frame):
 
+    # initializes the Pre-Deployment page
     def __init__(self, parent, controller):
         ttk.Frame.__init__(self, parent)
         
@@ -89,12 +93,14 @@ class PageOne(tk.Frame):
         button3 = ttk.Button(self, text="Back to Main", command=lambda: controller.show_frame(StartPage))
         canvas.create_window(60, 280, window=button3)
 
+    # returns filename
     def getFileName (self):
         global label2
         self.filename1 = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("text files","*.txt"),("all files","*.*")))
         label2 = ttk.Label(self, text=self.filename1)
         canvas.create_window(250, 50, window=label2)
 
+    # database is created with filename selected
     def createDatabase (self):
         file = self.filename1
         db_name = database_input.get()
@@ -107,6 +113,7 @@ class PageOne(tk.Frame):
         always_print = False
         format_type = 0
 
+        # reads for version of selected log
         with open(file) as infile:
             for line in infile:
                 if "sh ver" in line:
@@ -116,6 +123,7 @@ class PageOne(tk.Frame):
                 if always_print == True:
                     version.append(line)
         
+        # parses file depending on the type of cisco log
         for j in format_dic:
             for k in version:
                 if j in k:
@@ -127,6 +135,7 @@ class PageOne(tk.Frame):
 
         print("Format type: " +str(format_type))
 
+        # parses sh mac address table into variable mac_data
         with open(file) as infile:
             for line in infile:
                 if format_type == 1:
@@ -146,7 +155,8 @@ class PageOne(tk.Frame):
                     if always_print == True:
                         mac_data.append(line.split())
                         i += 1
-        
+
+        # creates sqlite db
         c.execute("""CREATE TABLE configs (
                     mac_address text,
                     port text,
@@ -163,20 +173,21 @@ class PageOne(tk.Frame):
             mac_data = mac_data[7:]
 
         print("MAC Addresses Found: "+ str(i))
-        ii=0
+        true_mac_counter=0
         #print(mac_data)
         for r in mac_data:
             if format_type == 2:
                 if r[x] != "CPU":
-                    ii += 1
+                    true_mac_counter += 1
                     ports.append(r[x])
+                    # appends ports of mac_data one by one into database
                     c.execute("INSERT INTO configs VALUES ('{}', '{}', '{}')".format(r[1], r[x], r[0]))
             else:
-                ii += 1
+                true_mac_counter += 1
                 ports.append(r[x])
                 c.execute("INSERT INTO configs VALUES ('{}', '{}', '{}')".format(r[1], r[x], r[0]))
         
-        print("MAC Addresses added to Database: "+ str(ii))
+        print("MAC Addresses added to Database: "+ str(true_mac_counter))
         con.commit()
 
         found_port = False
@@ -185,6 +196,7 @@ class PageOne(tk.Frame):
         con.commit()
         temp = ""
 
+        # adds configs from ports found in mac address table and adds to database
         for port in ports:
             found_port = False
             if format_type == 1:
@@ -206,6 +218,7 @@ class PageOne(tk.Frame):
                     port2 = port.replace('Twe', 'TwentyFiveGigE')
                     temp = "interface " + port2
 
+            # finds interface from port and appends to database
             with open(file) as infile:
                 for line in infile:
                     templine = line.strip()
@@ -233,6 +246,7 @@ class PageOne(tk.Frame):
         
 class PageTwo(tk.Frame):
 
+    # initializes post deployment page
     def __init__(self, parent, controller):
         ttk.Frame.__init__(self, parent)
 
@@ -273,18 +287,21 @@ class PageTwo(tk.Frame):
         button4 = ttk.Button(self, text='Back to Main', command=lambda: controller.show_frame(StartPage))
         canvas2.create_window(60, 280, window=button4)
 
+    # grabs filename selected within this page
     def getFileName2 (self):
         global label3
         self.filename2 = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("text files","*.txt"),("all files","*.*")))
         label3 = ttk.Label(self,text=self.filename2)
         canvas2.create_window(250, 50, window=label3)
 
+    # grabs databse selected within this page
     def getDatabase (self):
         global label4
         self.filename3 = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("database files","*.db"),("all files","*.*")))
         label4 = ttk.Label(self,text=self.filename3)
         canvas2.create_window(250, 130, window =label4)
 
+    # creates txt file from selected options
     def createConfig (self):
         file = self.filename2
         db_name = self.filename3
@@ -297,6 +314,7 @@ class PageTwo(tk.Frame):
         format_type = 0
         trunkport = False
 
+        # reads for version of selected log
         with open(file) as infile:
             for line in infile:
                 for item in format_dic:
@@ -334,7 +352,7 @@ class PageTwo(tk.Frame):
             num=3
             mac_data = mac_data[7:]
 
-        print("IOS Found: " + ios)
+        print("IOS Image Found: " + ios)
         fileout = config_input.get()
         config = []
         duplicate_check = []
