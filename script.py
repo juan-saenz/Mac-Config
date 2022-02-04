@@ -2,7 +2,7 @@ import tkinter as tk
 import sqlite3
 from tkinter import filedialog
 from tkinter import ttk
-from ttkthemes import ThemedStyle
+#from ttkthemes import ThemedStyle
 
 LARGE_FONT= ("Verdana", 20)
 db_name = ""
@@ -24,8 +24,6 @@ class App(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
 
         tk.Tk.wm_title(self, "Configuration Script")
-        style = ThemedStyle()
-        style.theme_use('arc')
 
         container = ttk.Frame(self)
         container.pack(side="top", fill="both", expand = True)
@@ -73,7 +71,7 @@ class PageOne(tk.Frame):
         label.pack(pady=10,padx=10)
         
         global canvas
-        canvas = tk.Canvas(self, width = 500, height = 300, bg="#f6f7f8", highlightthickness=0)
+        canvas = tk.Canvas(self, width = 500, height = 300, highlightthickness=0)
         canvas.pack()
         
         button1 = ttk.Button(self, text='Select Pre-Deployment Log', command=lambda: self.getFileName())
@@ -115,7 +113,7 @@ class PageOne(tk.Frame):
         # reads for version of selected log
         with open(file) as infile:
             for line in infile:
-                if "sh ver" in line:
+                if "#sh ver" in line:
                     always_print = True
                 if "Compiled" in line:
                     always_print = False
@@ -258,7 +256,7 @@ class PageTwo(tk.Frame):
         label.pack(pady=10,padx=10)
 
         global canvas2
-        canvas2 = tk.Canvas(self, width = 500, height = 300, bg="#f6f7f8", highlightthickness=0)
+        canvas2 = tk.Canvas(self, width = 500, height = 300, highlightthickness=0)
         canvas2.pack()
 
         button1 = ttk.Button(self, text='Select Post-Deployment Log', command=lambda: self.getFileName2())
