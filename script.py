@@ -63,7 +63,6 @@ class StartPage(tk.Frame):
         button2 = ttk.Button(self, text="Post-Deployment", command=lambda: controller.show_frame(PageTwo))
         button2.place(x=300,y=100)
 
-
 class PageOne(tk.Frame):
 
     # initializes the Pre-Deployment page
@@ -128,12 +127,11 @@ class PageOne(tk.Frame):
             for k in version:
                 if j in k:
                     format_type = format_dic[j]
+                    ios = j
                     if format_type == 1:
                         i=-5
                     if format_type == 2:
                         i=-6
-
-        print("Format type: " +str(format_type))
 
         # parses sh mac address table into variable mac_data
         with open(file) as infile:
@@ -172,6 +170,9 @@ class PageOne(tk.Frame):
             x=3
             mac_data = mac_data[7:]
 
+        print("*** Pre Deploy Log ***")   
+        print("IOS Image Found: " + ios)
+        print("Format Type " + str(format_type))
         print("MAC Addresses Found: "+ str(i))
         true_mac_counter=0
         #print(mac_data)
@@ -210,6 +211,9 @@ class PageOne(tk.Frame):
                     temp = "interface " + port2
                 elif port.startswith('Po'):
                     port2 = port.replace('Po', 'Port-channel')
+                    temp = "interface " + port2
+                elif port.startswith('Fi'):
+                    port2 = port.replace('Fi', 'FiveGigabitEthernet')
                     temp = "interface " + port2
                 elif port.startswith('Te'):
                     port2 = port.replace('Te', 'TenGigabitEthernet')
@@ -310,6 +314,7 @@ class PageTwo(tk.Frame):
         c = con.cursor()
 
         mac_data = []
+        version = []
         always_print = False
         format_type = 0
         trunkport = False
@@ -317,15 +322,29 @@ class PageTwo(tk.Frame):
         # reads for version of selected log
         with open(file) as infile:
             for line in infile:
-                for item in format_dic:
-                    if item in line:
-                        format_type = format_dic[item]
-                        ios = item
-                        if format_type == 1:
-                            i=-5
-                        if format_type == 2:
-                            i=-6
-                        continue
+                if "sh ver" in line:
+                    always_print = True
+                if "Compiled" in line:
+                    always_print = False
+                if always_print == True:
+                    version.append(line)
+
+        # parses file depending on the type of cisco log
+        for j in format_dic:
+            for k in version:
+                if j in k:
+                    format_type = format_dic[j]
+                    ios = j
+                    if format_type == 1:
+                        i=-5
+                    if format_type == 2:
+                        i=-6
+
+        print("Format type: " +str(format_type))
+
+        # parses sh mac address table into variable mac_data
+        with open(file) as infile:
+            for line in infile:
                 if format_type == 1:
                     if "sh mac address" in line:
                         always_print = True
@@ -351,8 +370,9 @@ class PageTwo(tk.Frame):
         if format_type == 2:
             num=3
             mac_data = mac_data[7:]
-
-        print("IOS Image Found: " + ios)
+     
+        print("*** Post Deploy Log ***")   
+        print("IOS Image Found: " + ios + ": Format Type " + str(format_type))
         fileout = config_input.get()
         config = []
         duplicate_check = []
@@ -376,7 +396,6 @@ class PageTwo(tk.Frame):
                         temp = c.fetchone()
                         if temp != None:
                             temp1 = temp[0]
-                            #print(temp1)
                             if checkbox1.instate(['selected']) == True:
                                 config.append("\r\ndefault interface " + item[num]+"\r\n")
                                 config.append("interface " + item[num]+"\r\n")
@@ -398,6 +417,7 @@ class PageTwo(tk.Frame):
             for elem in config:
                 outfile.write(elem)
 
+        print("\nFound " + str(counter) + " matching ports")
         con.commit()
         con.close()
 
