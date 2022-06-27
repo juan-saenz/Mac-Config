@@ -62,7 +62,7 @@ class StartPage(tk.Frame):
         button2 = ttk.Button(self, text="Post-Deployment", command=lambda: controller.show_frame(PageTwo))
         button2.place(x=300,y=100)
 
-        button3 = ttk.Button(self, width = 10, text="Reset Program", command=lambda: self.reset_app())
+        button3 = ttk.Button(self, text="Reset Program", command=lambda: self.reset_app())
         button3.place(x=200, y=310)
 
     def reset_app(self):
