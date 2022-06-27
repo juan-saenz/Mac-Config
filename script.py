@@ -1,8 +1,8 @@
 import tkinter as tk
 import sqlite3
+import re, os, sys
 from tkinter import filedialog
 from tkinter import ttk
-#from ttkthemes import ThemedStyle
 
 LARGE_FONT= ("Verdana", 20)
 db_name = ""
@@ -15,7 +15,8 @@ format_dic = {"Catalyst 4500 L3 Switch Software":1,
                 "Catalyst L3 Switch Software":2,
                 "C3750E Software":2, 
                 "C3500XL Software":2, 
-                "C3560 Software":2}
+                "C3560 Software":2,
+                "Cisco IOS XE Software":2}
 
 # initializes GUI Application
 class App(tk.Tk):
@@ -61,6 +62,14 @@ class StartPage(tk.Frame):
         button2 = ttk.Button(self, text="Post-Deployment", command=lambda: controller.show_frame(PageTwo))
         button2.place(x=300,y=100)
 
+        button3 = ttk.Button(self, width = 10, text="Reset Program", command=lambda: self.reset_app())
+        button3.place(x=200, y=310)
+
+    def reset_app(self):
+        sys.stdout.flush()
+        os.execv(sys.executable, ['python'] + sys.argv)
+
+
 class PageOne(tk.Frame):
 
     # initializes the Pre-Deployment page
@@ -87,13 +96,13 @@ class PageOne(tk.Frame):
         button2 = ttk.Button(self, text='Create Database', command=lambda: self.createDatabase())
         canvas.create_window(250, 180, window=button2)
 
-        button3 = ttk.Button(self, text="Back to Main", command=lambda: controller.show_frame(StartPage))
+        button3 = ttk.Button(self, text="<- Back to Main", command=lambda: controller.show_frame(StartPage))
         canvas.create_window(60, 280, window=button3)
 
     # returns filename
     def getFileName (self):
         global label2
-        self.filename1 = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("text files","*.txt"),("all files","*.*")))
+        self.filename1 = filedialog.askopenfilename(title = "Select file",filetypes = (("text files","*.txt"),("all files","*.*")))
         label2 = ttk.Label(self, text=self.filename1)
         canvas.create_window(250, 50, window=label2)
 
@@ -112,24 +121,19 @@ class PageOne(tk.Frame):
 
         # reads for version of selected log
         with open(file) as infile:
-            for line in infile:
-                if "#sh ver" in line:
-                    always_print = True
-                if "Compiled" in line:
-                    always_print = False
-                if always_print == True:
-                    version.append(line)
+            output = infile.read()
+            m = re.search(r"Cisco .+ Software", output)
+            # print(m.group(0))
         
         # parses file depending on the type of cisco log
-        for j in format_dic:
-            for k in version:
-                if j in k:
-                    format_type = format_dic[j]
-                    ios = j
-                    if format_type == 1:
-                        i=-5
-                    if format_type == 2:
-                        i=-6
+        for format in format_dic:
+            if format in m.group(0):
+                format_type = format_dic[format]
+                ios = format
+                if format_type == 1:
+                    i=-5
+                if format_type == 2:
+                    i=-6
 
         # parses sh mac address table into variable mac_data
         with open(file) as infile:
@@ -168,10 +172,11 @@ class PageOne(tk.Frame):
             x=3
             mac_data = mac_data[7:]
 
-        print("*** Pre Deploy Log ***")   
+        print("\n*** Pre Deploy Log ***")   
         print("IOS Image Found: " + ios)
-        print("Format Type " + str(format_type))
+        print("Format Type: " + str(format_type))
         print("MAC Addresses Found: "+ str(i))
+        
         true_mac_counter=0
         #print(mac_data)
         for r in mac_data:
@@ -218,6 +223,9 @@ class PageOne(tk.Frame):
                     temp = "interface " + port2
                 elif port.startswith('Twe'):
                     port2 = port.replace('Twe', 'TwentyFiveGigE')
+                    temp = "interface " + port2
+                elif port.startswith('Tw'):
+                    port2 = port.replace('Tw', 'TwoGigabitEthernet')
                     temp = "interface " + port2
 
             # finds interface from port and appends to database
@@ -286,20 +294,20 @@ class PageTwo(tk.Frame):
         button3 = ttk.Button(self, text='Create Configurations', command=lambda: self.createConfig())
         canvas2.create_window(250, 250, window=button3)
 
-        button4 = ttk.Button(self, text='Back to Main', command=lambda: controller.show_frame(StartPage))
+        button4 = ttk.Button(self, text='<- Back to Main', command=lambda: controller.show_frame(StartPage))
         canvas2.create_window(60, 280, window=button4)
 
     # grabs filename selected within this page
     def getFileName2 (self):
         global label3
-        self.filename2 = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("text files","*.txt"),("all files","*.*")))
+        self.filename2 = filedialog.askopenfilename(title = "Select file",filetypes = (("text files","*.txt"),("all files","*.*")))
         label3 = ttk.Label(self,text=self.filename2)
         canvas2.create_window(250, 50, window=label3)
 
     # grabs databse selected within this page
     def getDatabase (self):
         global label4
-        self.filename3 = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("database files","*.db"),("all files","*.*")))
+        self.filename3 = filedialog.askopenfilename(title = "Select file",filetypes = (("database files","*.db"),("all files","*.*")))
         label4 = ttk.Label(self,text=self.filename3)
         canvas2.create_window(250, 130, window =label4)
 
@@ -319,24 +327,19 @@ class PageTwo(tk.Frame):
 
         # reads for version of selected log
         with open(file) as infile:
-            for line in infile:
-                if "sh ver" in line:
-                    always_print = True
-                if "Compiled" in line:
-                    always_print = False
-                if always_print == True:
-                    version.append(line)
-
+            output = infile.read()
+            m = re.search(r"Cisco .+ Software", output)
+            print(m.group(0))
+        
         # parses file depending on the type of cisco log
-        for j in format_dic:
-            for k in version:
-                if j in k:
-                    format_type = format_dic[j]
-                    ios = j
-                    if format_type == 1:
-                        i=-5
-                    if format_type == 2:
-                        i=-6
+        for format in format_dic:
+            if format in m.group(0):
+                format_type = format_dic[format]
+                ios = format
+                if format_type == 1:
+                    i=-5
+                if format_type == 2:
+                    i=-6
 
         print("Format type: " +str(format_type))
 
@@ -369,8 +372,9 @@ class PageTwo(tk.Frame):
             num=3
             mac_data = mac_data[7:]
      
-        print("*** Post Deploy Log ***")   
-        print("IOS Image Found: " + ios + ": Format Type " + str(format_type))
+        print("\n*** Post Deploy Log ***")   
+        print("IOS Image Found: " + ios)
+        print("Format Type" + str(format_type))
         fileout = config_input.get()
         config = []
         duplicate_check = []
